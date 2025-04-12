@@ -1,0 +1,1 @@
+# Inicializar o app flask posteriomente
