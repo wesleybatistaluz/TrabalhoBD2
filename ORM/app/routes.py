@@ -1,10 +1,16 @@
-from flask import Blueprint, request, jsonify
-from controllers.controller import OrderController
+from flask import Blueprint, request, jsonify, render_template
+from controllers.order_controller import OrderController
 from models.model import Orders, OrderDetails
 import datetime
 
 routes = Blueprint("routes", __name__)
-controller = OrderController()
+order_controller = OrderController()
+
+
+
+@routes.route("/", methods=["GET"])
+def home():
+    return render_template("formulario.html")
 
 @routes.route("/api/pedidos", methods=["POST"])
 def criar_pedido():
@@ -22,12 +28,11 @@ def criar_pedido():
             detalhe = OrderDetails(
                 productid=item["product_id"],
                 quantity=item["quantity"],
-                unitprice=item["unit_price"],
                 discount=0
             )
             detalhes.append(detalhe)
 
-        sucesso = controller.criar_pedido(pedido, detalhes)
+        sucesso = order_controller.criar_pedido(pedido, detalhes)
         if sucesso:
             return jsonify({"mensagem": "Pedido criado com sucesso!"}), 201
         else:

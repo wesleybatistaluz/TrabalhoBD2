@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 class DBConnectionHandler:
     
     def __init__(self) -> None:
-        self.__connection_string = 'postgresql://postgres:suasenha@localhost:5432/northwind'
+        self.__connection_string = 'postgresql://postgres:postgres@localhost:5432/northwind'
         self.__engine = self.__create_database_engine()
         self.session = None
         

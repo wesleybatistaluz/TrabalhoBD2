@@ -22,6 +22,7 @@ class OrderController:
                 if not product:
                     print(f"Produto com ID {detalhe.productid} não encontrado.")
                     return False
+                detalhe.unitprice = product.unitprice
 
         dao = OrderDAO()
         sucesso = dao.inserir_pedido(pedido, detalhes)
