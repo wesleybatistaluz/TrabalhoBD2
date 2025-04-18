@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Ranking de Funcionários{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Ranking de Funcionários por Vendas</h2>
+    <p>Selecione o período para gerar o ranking de vendas por funcionário</p>
+    
+    <div class="card">
+        <div class="card-header">
+            <h4>Filtro de Período</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('orders.employee_ranking_view') }}">
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="end_date" class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="safe_mode" name="safe_mode" value="true" checked>
+                    <label class="form-check-label" for="safe_mode">Usar modo seguro (prevenir SQL Injection)</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Gerar Ranking</button>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

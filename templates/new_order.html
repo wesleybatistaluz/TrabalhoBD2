@@ -1,0 +1,368 @@
+{% extends "layout.html" %}
+
+{% block title %}Novo Pedido{% endblock %}
+
+{% block content %}
+<h2>Criar Novo Pedido</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Modo de Operação
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="implementation" id="psycopg-safe" value="safe" checked>
+                    <label class="form-check-label" for="psycopg-safe">
+                        Seguro contra SQL Injection
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="implementation" id="psycopg-unsafe" value="unsafe">
+                    <label class="form-check-label" for="psycopg-unsafe">
+                        Vulnerável a SQL Injection (Demonstração)
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="orderForm">
+    <div class="row">
+        <!-- Cliente -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">Cliente</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="customerSearch" class="form-label">Buscar Cliente:</label>
+                        <input type="text" class="form-control" id="customerSearch" placeholder="Digite o nome do cliente">
+                    </div>
+                    <div class="mb-3">
+                        <div id="customerResults" class="list-group">
+                            <!-- Resultados da busca aparecerão aqui -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="selectedCustomer" class="form-label">Cliente Selecionado:</label>
+                        <input type="text" class="form-control" id="selectedCustomer" readonly>
+                        <input type="hidden" id="customerId" name="customer_id">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Funcionário -->
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">Funcionário</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="employeeSearch" class="form-label">Buscar Funcionário:</label>
+                        <input type="text" class="form-control" id="employeeSearch" placeholder="Digite o nome do funcionário">
+                    </div>
+                    <div class="mb-3">
+                        <div id="employeeResults" class="list-group">
+                            <!-- Resultados da busca aparecerão aqui -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="selectedEmployee" class="form-label">Funcionário Selecionado:</label>
+                        <input type="text" class="form-control" id="selectedEmployee" readonly>
+                        <input type="hidden" id="employeeId" name="employee_id">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data do Pedido -->
+    <div class="card mb-3">
+        <div class="card-header">Data do Pedido</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="orderDate" class="form-label">Data:</label>
+                <input type="date" class="form-control" id="orderDate" name="order_date">
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens do Pedido -->
+    <div class="card mb-3">
+        <div class="card-header">Itens do Pedido</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="productSearch" class="form-label">Buscar Produto:</label>
+                <input type="text" class="form-control" id="productSearch" placeholder="Digite o nome do produto">
+            </div>
+            <div class="mb-3">
+                <div id="productResults" class="list-group">
+                    <!-- Resultados da busca aparecerão aqui -->
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <table class="table table-striped" id="orderItems">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Preço Unitário</th>
+                            <th>Quantidade</th>
+                            <th>Subtotal</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Itens adicionados aparecerão aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-end mb-4">
+        <button type="button" id="submitOrder" class="btn btn-primary">Criar Pedido</button>
+    </div>
+</form>
+
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resultado da Operação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="resultMessage">
+                <!-- Mensagem de resultado aqui -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Variável para controlar se estamos no modo seguro ou inseguro
+        let safeMode = true;
+        
+        // Event listener para os radio buttons de implementação
+        $('input[name="implementation"]').change(function() {
+            safeMode = $(this).val() === 'safe';
+            console.log("Modo seguro:", safeMode);
+        });
+        
+        // Busca de clientes
+        $('#customerSearch').on('input', function() {
+            const name = $(this).val();
+            if (name.length < 2) return;
+            
+            $.getJSON('/orders/search_customer', { name: name, safe: safeMode })
+                .done(function(data) {
+                    if (data.success) {
+                        const results = $('#customerResults');
+                        results.empty();
+                        
+                        data.customers.forEach(function(customer) {
+                            results.append(
+                                `<a href="#" class="list-group-item list-group-item-action customer-item" 
+                                   data-id="${customer[0]}" data-name="${customer[1]}">
+                                    ${customer[1]}
+                                </a>`
+                            );
+                        });
+                    }
+                })
+                .fail(function(jqXHR) {
+                    console.error('Erro ao buscar clientes:', jqXHR.responseText);
+                });
+        });
+        
+        // Seleção de cliente
+        $(document).on('click', '.customer-item', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
+            $('#selectedCustomer').val(name);
+            $('#customerId').val(id);
+            $('#customerResults').empty();
+        });
+        
+        // Busca de funcionários
+        $('#employeeSearch').on('input', function() {
+            const name = $(this).val();
+            if (name.length < 2) return;
+            
+            $.getJSON('/orders/search_employee', { name: name, safe: safeMode })
+                .done(function(data) {
+                    if (data.success) {
+                        const results = $('#employeeResults');
+                        results.empty();
+                        
+                        data.employees.forEach(function(employee) {
+                            results.append(
+                                `<a href="#" class="list-group-item list-group-item-action employee-item" 
+                                   data-id="${employee[0]}" data-name="${employee[1]} ${employee[2]}">
+                                    ${employee[1]} ${employee[2]}
+                                </a>`
+                            );
+                        });
+                    }
+                })
+                .fail(function(jqXHR) {
+                    console.error('Erro ao buscar funcionários:', jqXHR.responseText);
+                });
+        });
+        
+        // Seleção de funcionário
+        $(document).on('click', '.employee-item', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
+            $('#selectedEmployee').val(name);
+            $('#employeeId').val(id);
+            $('#employeeResults').empty();
+        });
+        
+        // Busca de produtos
+        $('#productSearch').on('input', function() {
+            const name = $(this).val();
+            if (name.length < 2) return;
+            
+            $.getJSON('/orders/search_product', { name: name, safe: safeMode })
+                .done(function(data) {
+                    if (data.success) {
+                        const results = $('#productResults');
+                        results.empty();
+                        
+                        data.products.forEach(function(product) {
+                            results.append(
+                                `<a href="#" class="list-group-item list-group-item-action product-item" 
+                                   data-id="${product[0]}" data-name="${product[1]}" data-price="${product[2]}">
+                                    ${product[1]} (R$ ${product[2]})
+                                </a>`
+                            );
+                        });
+                    }
+                })
+                .fail(function(jqXHR) {
+                    console.error('Erro ao buscar produtos:', jqXHR.responseText);
+                });
+        });
+        
+        // Adicionar produto à tabela
+        $(document).on('click', '.product-item', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            const price = $(this).data('price');
+            
+            const rowCount = $('#orderItems tbody tr').length + 1;
+            
+            $('#orderItems tbody').append(`
+                <tr data-product-id="${id}">
+                    <td>${name}<input type="hidden" name="product_id[]" value="${id}"></td>
+                    <td>R$ ${price}<input type="hidden" name="price[]" value="${price}"></td>
+                    <td>
+                        <input type="number" name="quantity[]" class="form-control quantity" value="1" min="1">
+                    </td>
+                    <td class="subtotal">R$ ${price}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger remove-item">Remover</button>
+                    </td>
+                </tr>
+            `);
+            
+            $('#productResults').empty();
+            $('#productSearch').val('');
+        });
+        
+        // Atualizar subtotal quando a quantidade muda
+        $(document).on('change', '.quantity', function() {
+            const row = $(this).closest('tr');
+            const price = parseFloat(row.find('input[name="price[]"]').val());
+            const quantity = parseInt($(this).val());
+            const subtotal = price * quantity;
+            
+            row.find('.subtotal').text(`R$ ${subtotal.toFixed(2)}`);
+        });
+        
+        // Remover item
+        $(document).on('click', '.remove-item', function() {
+            $(this).closest('tr').remove();
+        });
+        
+        // Enviar pedido
+        $('#submitOrder').click(function() {
+            // Validações básicas
+            if (!$('#customerId').val()) {
+                alert('Selecione um cliente!');
+                return;
+            }
+            
+            if (!$('#employeeId').val()) {
+                alert('Selecione um funcionário!');
+                return;
+            }
+            
+            if ($('#orderItems tbody tr').length === 0) {
+                alert('Adicione pelo menos um item ao pedido!');
+                return;
+            }
+            
+            // Data do pedido (hoje se não fornecida)
+            if (!$('#orderDate').val()) {
+                const today = new Date().toISOString().split('T')[0];
+                $('#orderDate').val(today);
+            }
+            
+            // Preparar dados do formulário
+            const formData = new FormData(document.getElementById('orderForm'));
+            formData.append('safe_mode', safeMode);
+            
+            // Enviar pedido
+            $.ajax({
+                url: '/orders/create',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        $('#resultMessage').html(`<div class="alert alert-success">${response.message}</div>`);
+                        
+                        // Limpar formulário
+                        $('#orderForm')[0].reset();
+                        $('#orderItems tbody').empty();
+                        $('#customerResults').empty();
+                        $('#employeeResults').empty();
+                        $('#productResults').empty();
+                    } else {
+                        $('#resultMessage').html(`<div class="alert alert-danger">Erro: ${response.error}</div>`);
+                    }
+                    
+                    // Mostrar modal de resultado
+                    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+                    resultModal.show();
+                },
+                error: function(jqXHR) {
+                    console.error('Erro ao criar pedido:', jqXHR.responseText);
+                    $('#resultMessage').html(`<div class="alert alert-danger">Erro ao criar pedido!</div>`);
+                    
+                    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+                    resultModal.show();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

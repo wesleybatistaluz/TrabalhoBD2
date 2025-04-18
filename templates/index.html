@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}Início{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Sistema de Pedidos Northwind</h1>
+    <p class="lead">Sistema de demonstração para o banco de dados Northwind utilizando o padrão MVC e DAO.</p>
+    <hr class="my-4">
+    <p>Este sistema possui duas implementações: uma com psycopg2 e outra com SQLAlchemy.</p>
+    <p>A implementação com psycopg2 possui duas variantes: uma segura (prevenindo SQL Injection) e outra insegura (permitindo SQL Injection para demonstração).</p>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5>Gerenciar Pedidos</h5>
+                </div>
+                <div class="card-body">
+                    <p>Crie novos pedidos para os clientes da Northwind.</p>
+                    <a class="btn btn-outline-primary" href="{{ url_for('orders.new_order_form') }}">Criar Novo Pedido</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5>Detalhes de Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <p>Veja informações detalhadas sobre um pedido específico.</p>
+                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#orderSearchModal">
+                        Buscar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5>Ranking de Funcionários</h5>
+                </div>
+                <div class="card-body">
+                    <p>Veja o ranking de funcionários por desempenho de vendas.</p>
+                    <a class="btn btn-outline-info" href="{{ url_for('orders.employee_ranking_view') }}">
+                        Ver Ranking
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

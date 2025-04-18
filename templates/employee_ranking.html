@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}Ranking de Funcionários{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Ranking de Funcionários por Vendas</h2>
+    <p class="text-muted">Período: {{ start_date }} a {{ end_date }}</p>
+    
+    <div class="card">
+        <div class="card-header">
+            <h4>Resultados</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Posição</th>
+                        <th>Funcionário</th>
+                        <th class="text-right">Total de Pedidos</th>
+                        <th class="text-right">Total de Vendas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in ranking %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ employee[1] }}</td>
+                        <td class="text-right">{{ employee[2] }}</td>
+                        <td class="text-right">{{ "%.2f"|format(employee[3]) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{{ url_for('orders.employee_ranking_view') }}" class="btn btn-secondary">Nova Consulta</a>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar ao Início</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+<!-- templates/order_list.html -->
+{% extends "layout.html" %}
+
+{% block title %}Lista de Pedidos{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Lista de Pedidos</h3>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order[0] }}</td>
+                    <td>{{ order[1].strftime('%d/%m/%Y') }}</td>
+                    <td>{{ order[2] }}</td>
+                    <td>{{ order[3] }}</td>
+                    <td>
+                        <a href="{{ url_for('orders.view_order', order_id=order[0], safe=true) }}" class="btn btn-sm btn-info">
+                            Detalhes (Seguro)
+                        </a>
+                        <a href="{{ url_for('orders.view_order', order_id=order[0], safe=false) }}" class="btn btn-sm btn-warning">
+                            Detalhes (Inseguro)
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
